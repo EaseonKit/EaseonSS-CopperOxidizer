@@ -23,14 +23,15 @@ public class CopperGolemOxidationHandler {
 
     private static Field OXIDATION_LEVEL_FIELD = null;
     private static final Map<UUID, Long> COOLDOWN_MAP = new HashMap<>();
-    private static final long COOLDOWN_TICKS = 2; // 2틱 쿨다운
+    private static final long COOLDOWN_TICKS = 2;
 
     public static ActionResult onUseEntity(PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) {
+        // Easeon.LOGGER.info("=== onUseEntity called ===");
+
         if (!Easeon.CONFIG.isEnabled()) {
             return ActionResult.PASS;
         }
 
-        // 메인 핸드만 처리
         if (hand != Hand.MAIN_HAND) {
             return ActionResult.PASS;
         }
@@ -51,7 +52,6 @@ public class CopperGolemOxidationHandler {
             return ActionResult.SUCCESS;
         }
 
-        // 쿨다운 체크
         UUID entityId = entity.getUuid();
         long currentTime = world.getTime();
 
@@ -62,39 +62,88 @@ public class CopperGolemOxidationHandler {
             }
         }
 
-        // 쿨다운 설정
         COOLDOWN_MAP.put(entityId, currentTime);
 
-        Easeon.LOGGER.info("Hand called: {}, Client: {}", hand, world.isClient());
+        // Easeon.LOGGER.info("=== Starting oxidation process (SERVER SIDE) ===");
 
         try {
             if (OXIDATION_LEVEL_FIELD == null) {
+                // Easeon.LOGGER.info("Searching for OXIDATION_LEVEL field...");
+                // Easeon.LOGGER.info("Entity class: {}", entity.getClass().getName());
+
                 for (Field field : entity.getClass().getDeclaredFields()) {
-                    if (field.getName().equals("OXIDATION_LEVEL")) {
-                        OXIDATION_LEVEL_FIELD = field;
-                        OXIDATION_LEVEL_FIELD.setAccessible(true);
-                        break;
+                    field.setAccessible(true);
+
+                    // Easeon.LOGGER.info("Checking field: {} (type: {})", field.getName(), field.getType().getName());
+
+                    if (TrackedData.class.isAssignableFrom(field.getType())
+                            && java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+
+                        try {
+                            Object fieldValue = field.get(null);
+                            // Easeon.LOGGER.info("Found TrackedData field: {}, value: {}", field.getName(), fieldValue);
+
+                            if (fieldValue instanceof TrackedData<?>) {
+                                try {
+                                    Object value = entity.getDataTracker().get((TrackedData<?>) fieldValue);
+                                    // Easeon.LOGGER.info("Field {} contains value of type: {}", field.getName(), value.getClass().getName());
+
+                                    if (value instanceof Oxidizable.OxidationLevel) {
+                                        OXIDATION_LEVEL_FIELD = field;
+                                        // Easeon.LOGGER.info("SUCCESS! Found correct OXIDATION_LEVEL field: {}", field.getName());
+                                        break;
+                                    }
+                                } catch (Exception e) {
+                                    // Easeon.LOGGER.debug("Field {} is not the oxidation level field", field.getName());
+                                }
+                            }
+                        } catch (Exception e) {
+                            // Easeon.LOGGER.debug("Could not access field: {}", field.getName());
+                        }
                     }
                 }
+
+                // if (OXIDATION_LEVEL_FIELD == null) {
+                //     Easeon.LOGGER.error("OXIDATION_LEVEL field not found!");
+                // }
             }
 
             if (OXIDATION_LEVEL_FIELD != null) {
+                // Easeon.LOGGER.info("Getting oxidation data from field: {}", OXIDATION_LEVEL_FIELD.getName());
+
                 @SuppressWarnings("unchecked")
-                TrackedData<Oxidizable.OxidationLevel> oxidationData = (TrackedData<Oxidizable.OxidationLevel>) OXIDATION_LEVEL_FIELD.get(entity);
+                TrackedData<Oxidizable.OxidationLevel> oxidationData =
+                        (TrackedData<Oxidizable.OxidationLevel>) OXIDATION_LEVEL_FIELD.get(null);
 
                 Oxidizable.OxidationLevel currentLevel = entity.getDataTracker().get(oxidationData);
+                // Easeon.LOGGER.info("Current oxidation level: {}", currentLevel);
 
                 if (currentLevel != Oxidizable.OxidationLevel.OXIDIZED) {
                     Oxidizable.OxidationLevel nextLevel = getNextOxidationLevel(currentLevel);
+                    // Easeon.LOGGER.info("Setting new level: {} -> {}", currentLevel, nextLevel);
+
                     entity.getDataTracker().set(oxidationData, nextLevel);
-                    Easeon.LOGGER.info("Oxidation: {} -> {}", currentLevel, nextLevel);
+
+                    // Oxidizable.OxidationLevel verifyLevel = entity.getDataTracker().get(oxidationData);
+                    // Easeon.LOGGER.info("Verification - New level is: {}", verifyLevel);
+
+                    // if (verifyLevel == nextLevel) {
+                    //     Easeon.LOGGER.info("Oxidation SUCCESS!");
+                    // } else {
+                    //     Easeon.LOGGER.error("Oxidation FAILED - level did not change!");
+                    // }
                 } else {
+                    // Easeon.LOGGER.info("Already fully oxidized");
                     return ActionResult.PASS;
                 }
+            } else {
+                // Easeon.LOGGER.error("OXIDATION_LEVEL_FIELD is null, cannot proceed");
+                return ActionResult.FAIL;
             }
 
         } catch (Exception e) {
-            Easeon.LOGGER.error("Failed to modify oxidation level", e);
+            // Easeon.LOGGER.error("Failed to modify oxidation level", e);
+            // e.printStackTrace();
             return ActionResult.FAIL;
         }
 
@@ -129,9 +178,9 @@ public class CopperGolemOxidationHandler {
             );
         }
 
-        // 오래된 쿨다운 데이터 정리 (100틱 이상 지난 것들)
         COOLDOWN_MAP.entrySet().removeIf(entry -> currentTime - entry.getValue() > 100);
 
+        // Easeon.LOGGER.info("=== Oxidation process completed ===");
         return ActionResult.SUCCESS;
     }
 
