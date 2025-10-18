@@ -2,16 +2,12 @@
 	"schemaVersion": 1,
 	"id": "easeon-ss-copperoxidizer",
 	"version": "${version}",
-	"name": "Template Mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "EaseonSS - CopperOxidizer",
+	"description": "Accelerate copper oxidation with water bottles. Right-click copper blocks or golems to advance oxidation stages.",
 	"authors": [
-		"Me!"
+		"Teron"
 	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
-	"license": "CC0-1.0",
+    "license": "All Rights Reserved",
 	"icon": "assets/easeon/icon.png",
 	"environment": "*",
 	"entrypoints": {
