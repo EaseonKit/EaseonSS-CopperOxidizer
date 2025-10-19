@@ -28,10 +28,10 @@ public class Easeon implements ModInitializer {
         });
 
         // 블록 우클릭 이벤트 등록
-        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
+//        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
             UseBlockCallback.EVENT.register(OxidationHandler::onUseBlock);
             UseEntityCallback.EVENT.register(CopperGolemOxidationHandler::onUseEntity);
-        }
+//        }
 
         LOGGER.info("Copper Oxidizer Mod Initialized!");
     }
