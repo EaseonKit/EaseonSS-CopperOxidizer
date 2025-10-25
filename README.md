@@ -3,8 +3,14 @@
 **Loader:** `Fabric`  
 **Side:** `Server-Side`, `Singleplayer`
 
+**This mod requires <a href="https://modrinth.com/mod/easeon-ss-core" target="_blank">EaseonSS-Core</a>**
+
+
 ## Overview
 Copper Oxidizer is a server-side Fabric mod that allows players to accelerate copper oxidation using water bottles. Perfect for builders who want to quickly age copper blocks and golems without waiting for natural oxidation.
+
+## Preview
+![showcase](https://github.com/EaseonKit/EaseonSS-CopperOxidizer/blob/main/showcase.webp?raw=true)
 
 ## Features
 - **Instant Oxidation**: Right-click copper blocks or golems with water bottles to advance oxidation stages
@@ -13,7 +19,7 @@ Copper Oxidizer is a server-side Fabric mod that allows players to accelerate co
 - **Server-Side Only**: No client installation required for players to benefit
 
 ## Commands
-All commands require OP level 2 permission.  
+All commands require OP level 2 permission.
 
 **View Current Status:**
 ```
@@ -46,3 +52,11 @@ All commands require OP level 2 permission.
 - consumeWater: Whether water bottles are consumed on use
 - showParticles: Show particle effects when oxidizing
 - playSound: Play sound effects when oxidizing
+
+<br/><br/>
+
+---
+
+### 🔗 More Easeon Mods
+Looking for more lightweight and practical mods in the same style?  
+Check out other Easeon series mods <a href="https://modrinth.com/user/Teron" target="_blank" rel="noopener noreferrer">here</a>.
