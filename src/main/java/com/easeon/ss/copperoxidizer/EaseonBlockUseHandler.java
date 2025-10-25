@@ -91,7 +91,7 @@ public class EaseonBlockUseHandler {
         // Lightning Rod (3단계까지만!)
         addCopperBlockMapping("lightning_rod", "exposed_lightning_rod", "weathered_lightning_rod", "oxidized_lightning_rod");
 
-        logger.info("Copper Oxidizer: {} oxidation mappings loaded", OXIDATION_MAP.size());
+//        logger.info("Copper Oxidizer: {} oxidation mappings loaded", OXIDATION_MAP.size());
     }
 
     // Registry를 사용해 블록 매핑 추가 (4단계는 절대 추가 안 함!)
@@ -108,7 +108,7 @@ public class EaseonBlockUseHandler {
                 OXIDATION_MAP.put(exposedBlock, weatheredBlock);
                 OXIDATION_MAP.put(weatheredBlock, oxidizedBlock);
                 // oxidizedBlock는 키로 추가 안 함! (더 이상 산화 안 됨)
-                logger.info("Added oxidation mapping for: {}", base);
+//                logger.info("Added oxidation mapping for: {}", base);
             }
         } catch (Exception e) {
             logger.debug("Block not found: {} (probably not in this version)", base);
@@ -116,7 +116,7 @@ public class EaseonBlockUseHandler {
     }
 
     public static ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hitResult) {
-        logger.info("onUseBlock: hand-{}, client-{}", hand.toString(), world.isClient());
+//        logger.info("onUseBlock: hand-{}, client-{}", hand.toString(), world.isClient());
 
         ItemStack heldItem = player.getStackInHand(hand);
 

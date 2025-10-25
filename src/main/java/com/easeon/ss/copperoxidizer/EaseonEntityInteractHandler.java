@@ -26,7 +26,7 @@ public class EaseonEntityInteractHandler {
     private static final long COOLDOWN_TICKS = 2;
 
     public static ActionResult onUseEntity(ServerPlayerEntity player, World world, Entity entity, Hand hand) {
-        logger.info("onUseEntity: hand-{}, client-{}", hand.toString(), world.isClient());
+//        logger.info("onUseEntity: hand-{}, client-{}", hand.toString(), world.isClient());
 
         if (hand != Hand.MAIN_HAND) {
             return ActionResult.PASS;
