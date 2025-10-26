@@ -1,5 +1,6 @@
 package com.easeon.ss.copperoxidizer;
 
+import com.easeon.ss.copperoxidizer.common.Helper;
 import com.easeon.ss.core.util.system.EaseonLogger;
 import net.minecraft.block.Oxidizable;
 import net.minecraft.entity.Entity;
@@ -40,7 +41,7 @@ public class EaseonEntityInteractHandler {
 
         ItemStack heldItem = player.getStackInHand(hand);
 
-        if (!heldItem.isOf(Items.POTION) || !isWaterBottle(heldItem)) {
+        if (!heldItem.isOf(Items.POTION) || !Helper.isWaterBottle(heldItem)) {
             return ActionResult.PASS;
         }
 
@@ -135,33 +136,15 @@ public class EaseonEntityInteractHandler {
 
         COOLDOWN_MAP.entrySet().removeIf(entry -> currentTime - entry.getValue() > 100);
 
-        // Easeon.LOGGER.info("=== Oxidation process completed ===");
-        return ActionResult.SUCCESS;
+//        logger.info("=== Oxidation process completed ===");
+        return ActionResult.FAIL;
     }
 
     private static Oxidizable.OxidationLevel getNextOxidationLevel(Oxidizable.OxidationLevel current) {
         return switch (current) {
             case UNAFFECTED -> Oxidizable.OxidationLevel.EXPOSED;
             case EXPOSED -> Oxidizable.OxidationLevel.WEATHERED;
-            case WEATHERED -> Oxidizable.OxidationLevel.OXIDIZED;
-            case OXIDIZED -> Oxidizable.OxidationLevel.OXIDIZED;
+            case WEATHERED, OXIDIZED -> Oxidizable.OxidationLevel.OXIDIZED;
         };
-    }
-
-    private static boolean isWaterBottle(ItemStack stack) {
-        if (!stack.isOf(Items.POTION)) {
-            return false;
-        }
-
-        var potionContents = stack.get(net.minecraft.component.DataComponentTypes.POTION_CONTENTS);
-        if (potionContents == null) {
-            return false;
-        }
-
-        for (var effect : potionContents.getEffects()) {
-            return false;
-        }
-
-        return true;
     }
 }

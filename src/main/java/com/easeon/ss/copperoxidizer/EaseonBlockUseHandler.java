@@ -1,127 +1,34 @@
 package com.easeon.ss.copperoxidizer;
 
+import com.easeon.ss.copperoxidizer.common.Helper;
 import com.easeon.ss.core.util.system.EaseonLogger;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import java.util.HashMap;
-import java.util.Map;
+
+import static com.easeon.ss.copperoxidizer.common.CopperInfo.OXIDATION_MAP;
 
 public class EaseonBlockUseHandler {
     private static final EaseonLogger logger = EaseonLogger.of();
-    private static final Map<Block, Block> OXIDATION_MAP = new HashMap<>();
-
-    static {
-        // 기본 구리 블록 (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.COPPER_BLOCK, Blocks.EXPOSED_COPPER);
-        OXIDATION_MAP.put(Blocks.EXPOSED_COPPER, Blocks.WEATHERED_COPPER);
-        OXIDATION_MAP.put(Blocks.WEATHERED_COPPER, Blocks.OXIDIZED_COPPER);
-
-        // Cut Copper (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.CUT_COPPER, Blocks.EXPOSED_CUT_COPPER);
-        OXIDATION_MAP.put(Blocks.EXPOSED_CUT_COPPER, Blocks.WEATHERED_CUT_COPPER);
-        OXIDATION_MAP.put(Blocks.WEATHERED_CUT_COPPER, Blocks.OXIDIZED_CUT_COPPER);
-
-        // Cut Copper Stairs (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.CUT_COPPER_STAIRS, Blocks.EXPOSED_CUT_COPPER_STAIRS);
-        OXIDATION_MAP.put(Blocks.EXPOSED_CUT_COPPER_STAIRS, Blocks.WEATHERED_CUT_COPPER_STAIRS);
-        OXIDATION_MAP.put(Blocks.WEATHERED_CUT_COPPER_STAIRS, Blocks.OXIDIZED_CUT_COPPER_STAIRS);
-
-        // Cut Copper Slabs (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.CUT_COPPER_SLAB, Blocks.EXPOSED_CUT_COPPER_SLAB);
-        OXIDATION_MAP.put(Blocks.EXPOSED_CUT_COPPER_SLAB, Blocks.WEATHERED_CUT_COPPER_SLAB);
-        OXIDATION_MAP.put(Blocks.WEATHERED_CUT_COPPER_SLAB, Blocks.OXIDIZED_CUT_COPPER_SLAB);
-
-        // Copper Bulb (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.COPPER_BULB, Blocks.EXPOSED_COPPER_BULB);
-        OXIDATION_MAP.put(Blocks.EXPOSED_COPPER_BULB, Blocks.WEATHERED_COPPER_BULB);
-        OXIDATION_MAP.put(Blocks.WEATHERED_COPPER_BULB, Blocks.OXIDIZED_COPPER_BULB);
-
-        // Copper Door (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.COPPER_DOOR, Blocks.EXPOSED_COPPER_DOOR);
-        OXIDATION_MAP.put(Blocks.EXPOSED_COPPER_DOOR, Blocks.WEATHERED_COPPER_DOOR);
-        OXIDATION_MAP.put(Blocks.WEATHERED_COPPER_DOOR, Blocks.OXIDIZED_COPPER_DOOR);
-
-        // Copper Trapdoor (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.COPPER_TRAPDOOR, Blocks.EXPOSED_COPPER_TRAPDOOR);
-        OXIDATION_MAP.put(Blocks.EXPOSED_COPPER_TRAPDOOR, Blocks.WEATHERED_COPPER_TRAPDOOR);
-        OXIDATION_MAP.put(Blocks.WEATHERED_COPPER_TRAPDOOR, Blocks.OXIDIZED_COPPER_TRAPDOOR);
-
-        // Copper Grate (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.COPPER_GRATE, Blocks.EXPOSED_COPPER_GRATE);
-        OXIDATION_MAP.put(Blocks.EXPOSED_COPPER_GRATE, Blocks.WEATHERED_COPPER_GRATE);
-        OXIDATION_MAP.put(Blocks.WEATHERED_COPPER_GRATE, Blocks.OXIDIZED_COPPER_GRATE);
-
-        // Chiseled Copper (3단계까지만!)
-        OXIDATION_MAP.put(Blocks.CHISELED_COPPER, Blocks.EXPOSED_CHISELED_COPPER);
-        OXIDATION_MAP.put(Blocks.EXPOSED_CHISELED_COPPER, Blocks.WEATHERED_CHISELED_COPPER);
-        OXIDATION_MAP.put(Blocks.WEATHERED_CHISELED_COPPER, Blocks.OXIDIZED_CHISELED_COPPER);
-
-        // === Copper Age 업데이트 새 블록들 (Registry 사용) ===
-
-        // Copper Chest (3단계까지만!)
-        addCopperBlockMapping("copper_chest", "exposed_copper_chest", "weathered_copper_chest", "oxidized_copper_chest");
-
-        // Copper Bars (3단계까지만!)
-        addCopperBlockMapping("copper_bars", "exposed_copper_bars", "weathered_copper_bars", "oxidized_copper_bars");
-
-        // Copper Chain (3단계까지만!)
-        addCopperBlockMapping("copper_chain", "exposed_copper_chain", "weathered_copper_chain", "oxidized_copper_chain");
-
-        // Copper Lantern (3단계까지만!)
-        addCopperBlockMapping("copper_lantern", "exposed_copper_lantern", "weathered_copper_lantern", "oxidized_copper_lantern");
-
-        // Copper Golem Statue (3단계까지만!)
-        addCopperBlockMapping("copper_golem_statue", "exposed_copper_golem_statue", "weathered_copper_golem_statue", "oxidized_copper_golem_statue");
-
-        // Lightning Rod (3단계까지만!)
-        addCopperBlockMapping("lightning_rod", "exposed_lightning_rod", "weathered_lightning_rod", "oxidized_lightning_rod");
-
-//        logger.info("Copper Oxidizer: {} oxidation mappings loaded", OXIDATION_MAP.size());
-    }
-
-    // Registry를 사용해 블록 매핑 추가 (4단계는 절대 추가 안 함!)
-    private static void addCopperBlockMapping(String base, String exposed, String weathered, String oxidized) {
-        try {
-            Block baseBlock = Registries.BLOCK.get(Identifier.ofVanilla(base));
-            Block exposedBlock = Registries.BLOCK.get(Identifier.ofVanilla(exposed));
-            Block weatheredBlock = Registries.BLOCK.get(Identifier.ofVanilla(weathered));
-            Block oxidizedBlock = Registries.BLOCK.get(Identifier.ofVanilla(oxidized));
-
-            // 에어 블록이 아닌 경우에만 3단계까지 매핑 추가
-            if (!baseBlock.equals(Blocks.AIR) && !exposedBlock.equals(Blocks.AIR)) {
-                OXIDATION_MAP.put(baseBlock, exposedBlock);
-                OXIDATION_MAP.put(exposedBlock, weatheredBlock);
-                OXIDATION_MAP.put(weatheredBlock, oxidizedBlock);
-                // oxidizedBlock는 키로 추가 안 함! (더 이상 산화 안 됨)
-//                logger.info("Added oxidation mapping for: {}", base);
-            }
-        } catch (Exception e) {
-            logger.debug("Block not found: {} (probably not in this version)", base);
-        }
-    }
 
     public static ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hitResult) {
-//        logger.info("onUseBlock: hand-{}, client-{}", hand.toString(), world.isClient());
+//        logger.debug("onUseBlock: hand-{}, client-{}", hand.toString(), world.isClient());
 
         ItemStack heldItem = player.getStackInHand(hand);
 
         // 물병이 아니면 패스
-        if (!heldItem.isOf(Items.POTION) || !isWaterBottle(heldItem)) {
+        if (!heldItem.isOf(Items.POTION) || !Helper.isWaterBottle(heldItem)) {
             return ActionResult.PASS;
         }
 
@@ -135,9 +42,9 @@ public class EaseonBlockUseHandler {
         }
 
         // 산화 가능한 블록인지 확인
-        Block nextBlock = getNextOxidationStage(block);
+        var copperInfo = OXIDATION_MAP.get(block);
 
-        if (nextBlock == null) {
+        if (copperInfo == null || copperInfo.requiresSneaking != player.isSneaking()) {
             return ActionResult.PASS;
         }
 
@@ -147,8 +54,7 @@ public class EaseonBlockUseHandler {
         }
 
         // ===== 서버에서만 실제 산화 처리 =====
-
-        BlockState newState = nextBlock.getDefaultState();
+        BlockState newState = copperInfo.nextStage.getDefaultState();
 
         // 기존 블록의 속성 복사
         for (var property : state.getProperties()) {
@@ -185,38 +91,12 @@ public class EaseonBlockUseHandler {
         // 사운드 재생
         world.playSound(null, pos, SoundEvents.ITEM_BOTTLE_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
 
-        return ActionResult.CONSUME;
-    }
-
-    private static boolean isWaterBottle(ItemStack stack) {
-        if (!stack.isOf(Items.POTION)) {
-            return false;
-        }
-
-        var potionContents = stack.get(net.minecraft.component.DataComponentTypes.POTION_CONTENTS);
-
-        if (potionContents == null) {
-            return false;
-        }
-
-        // 효과가 하나도 없으면 물병
-        boolean hasEffects = false;
-        for (var effect : potionContents.getEffects()) {
-            hasEffects = true;
-            break;
-        }
-
-        return !hasEffects;
+        return ActionResult.SUCCESS;
     }
 
     private static boolean isWaxed(Block block) {
         String blockName = block.getTranslationKey();
         return blockName.contains("waxed");
-    }
-
-    private static Block getNextOxidationStage(Block block) {
-        // 매핑에 있으면 반환, 없으면 null (4단계는 매핑에 없으므로 무조건 null!)
-        return OXIDATION_MAP.get(block);
     }
 
     @SuppressWarnings("unchecked")
