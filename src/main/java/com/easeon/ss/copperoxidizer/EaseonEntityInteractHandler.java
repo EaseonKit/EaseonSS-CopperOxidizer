@@ -1,15 +1,16 @@
 package com.easeon.ss.copperoxidizer;
 
-import com.easeon.ss.copperoxidizer.common.Helper;
+import com.easeon.ss.core.game.EaseonItem;
+import com.easeon.ss.core.game.EaseonParticle;
+import com.easeon.ss.core.game.EaseonSound;
+import com.easeon.ss.core.helper.ItemHelper;
 import com.easeon.ss.core.util.system.EaseonLogger;
 import net.minecraft.block.Oxidizable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.TrackedData;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
@@ -27,21 +28,14 @@ public class EaseonEntityInteractHandler {
     private static final long COOLDOWN_TICKS = 2;
 
     public static ActionResult onUseEntity(ServerPlayerEntity player, World world, Entity entity, Hand hand) {
-//        logger.info("onUseEntity: hand-{}, client-{}", hand.toString(), world.isClient());
+        var entityType = entity.getType().toString();
 
-        if (hand != Hand.MAIN_HAND) {
-            return ActionResult.PASS;
-        }
+        if (hand != Hand.MAIN_HAND) return ActionResult.PASS;
+        if (!entityType.contains("copper_golem")) return ActionResult.PASS;
 
-        String entityType = entity.getType().toString();
+        var heldItem = player.getStackInHand(hand);
 
-        if (!entityType.contains("copper_golem")) {
-            return ActionResult.PASS;
-        }
-
-        ItemStack heldItem = player.getStackInHand(hand);
-
-        if (!heldItem.isOf(Items.POTION) || !Helper.isWaterBottle(heldItem)) {
+        if (!heldItem.isOf(Items.POTION) || !ItemHelper.isWaterBottle(heldItem)) {
             return ActionResult.PASS;
         }
 
@@ -49,8 +43,8 @@ public class EaseonEntityInteractHandler {
             return ActionResult.SUCCESS;
         }
 
-        UUID entityId = entity.getUuid();
-        long currentTime = world.getTime();
+        var entityId = entity.getUuid();
+        var currentTime = world.getTime();
 
         if (COOLDOWN_MAP.containsKey(entityId)) {
             long lastUseTime = COOLDOWN_MAP.get(entityId);
@@ -114,25 +108,11 @@ public class EaseonEntityInteractHandler {
 
         if (!player.getAbilities().creativeMode) {
             heldItem.decrement(1);
-            ItemStack emptyBottle = new ItemStack(Items.GLASS_BOTTLE);
-            if (!player.getInventory().insertStack(emptyBottle)) {
-                player.dropItem(emptyBottle, false);
-            }
+            EaseonItem.giveOrDropItem(player, Items.GLASS_BOTTLE);
         }
 
-        if (world instanceof ServerWorld serverWorld) {
-            serverWorld.spawnParticles(
-                    ParticleTypes.WAX_ON,
-                    entity.getX(),
-                    entity.getY() + entity.getHeight() / 2,
-                    entity.getZ(),
-                    10,
-                    0.3, 0.3, 0.3,
-                    0.1
-            );
-        }
-
-        world.playSound(null, entity.getBlockPos(), SoundEvents.ITEM_BOTTLE_EMPTY, SoundCategory.NEUTRAL, 1.0F, 1.0F);
+        EaseonParticle.spawn(world, ParticleTypes.WAX_ON, entity.getX(), entity.getY() + entity.getHeight() / 2, entity.getZ(), 10, 0.3, 0.3, 0.3, 0.1);
+        EaseonSound.playAll(world, entity.getBlockPos(), SoundEvents.ITEM_BOTTLE_EMPTY, SoundCategory.BLOCKS);
 
         COOLDOWN_MAP.entrySet().removeIf(entry -> currentTime - entry.getValue() > 100);
 
