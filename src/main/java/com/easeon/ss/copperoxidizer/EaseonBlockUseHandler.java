@@ -39,7 +39,7 @@ public class EaseonBlockUseHandler {
 
         // 산화 가능한 블록인지 확인
         var copperInfo = OXIDATION_MAP.get(block);
-        if (copperInfo == null || copperInfo.requiresSneaking != player.isSneaking()) {
+        if (copperInfo == null || copperInfo.sneaking != player.isSneaking()) {
             return ActionResult.PASS;
         }
 
@@ -52,8 +52,8 @@ public class EaseonBlockUseHandler {
         newState = BlockHelper.copyAllProperties(state, newState);
         world.setBlockState(pos, newState);
 
-        if (!player.getAbilities().creativeMode) {
-            heldItem.decrement(1);
+        EaseonItem.removeItem(player, heldItem);
+        if (!player.isCreative()) {
             EaseonItem.giveOrDropItem(player, Items.GLASS_BOTTLE);
         }
 

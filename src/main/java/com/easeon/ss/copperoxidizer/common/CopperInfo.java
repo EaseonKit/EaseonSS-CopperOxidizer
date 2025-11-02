@@ -9,11 +9,11 @@ import java.util.Map;
 public class CopperInfo {
     public static class CopperRecord {
         public final Block nextStage;
-        public final boolean requiresSneaking;
+        public final boolean sneaking;
 
         CopperRecord(Block nextStage, boolean requiresSneaking) {
             this.nextStage = nextStage;
-            this.requiresSneaking = requiresSneaking;
+            this.sneaking = requiresSneaking;
         }
     }
 
