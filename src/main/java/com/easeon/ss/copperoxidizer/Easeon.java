@@ -6,6 +6,7 @@ import com.easeon.ss.core.api.events.EaseonBlockUse;
 import com.easeon.ss.core.api.events.EaseonBlockUse.BlockUseTask;
 import com.easeon.ss.core.api.events.EaseonEntityInteract;
 import com.easeon.ss.core.api.events.EaseonEntityInteract.EntityInteractTask;
+import com.easeon.ss.core.helper.CopperHelper;
 import net.fabricmc.api.ModInitializer;
 
 public class Easeon extends BaseToggleModule implements ModInitializer {
@@ -19,6 +20,7 @@ public class Easeon extends BaseToggleModule implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        CopperHelper.init();
         logger.info("Initialized!");
     }
 
