@@ -1,12 +1,12 @@
 package com.easeon.ss.copperoxidizer;
 
-import com.easeon.ss.core.game.EaseonItem;
-import com.easeon.ss.core.game.EaseonParticle;
-import com.easeon.ss.core.game.EaseonSound;
-import com.easeon.ss.core.helper.ItemHelper;
 import com.easeon.ss.core.util.system.EaseonLogger;
+import com.easeon.ss.core.wrapper.EaseonEntity;
+import com.easeon.ss.core.wrapper.EaseonPlayer;
+import com.easeon.ss.core.wrapper.EaseonWorld;
 import net.minecraft.block.Oxidizable;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
@@ -17,57 +17,35 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.lang.reflect.Modifier;
 
 public class EaseonEntityInteractHandler {
     private static final EaseonLogger logger = EaseonLogger.of();
     private static Field OXIDATION_LEVEL_FIELD = null;
-    private static final Map<UUID, Long> COOLDOWN_MAP = new HashMap<>();
-    private static final long COOLDOWN_TICKS = 2;
 
-    public static ActionResult onUseEntity(ServerPlayerEntity player, World world, Entity entity, Hand hand) {
-        var entityType = entity.getType().toString();
+    public static ActionResult onUseEntity(ServerPlayerEntity mcPlayer, World mcWorld, Entity mcEntity, Hand hand) {
+        var entity = new EaseonEntity(mcEntity);
+        if (entity.not(EntityType.COPPER_GOLEM))
+            return ActionResult.PASS;
 
-        if (hand != Hand.MAIN_HAND) return ActionResult.PASS;
-        if (!entityType.contains("copper_golem")) return ActionResult.PASS;
-
+        var player = new EaseonPlayer(mcPlayer);
+        var world = new EaseonWorld(mcWorld);
         var heldItem = player.getStackInHand(hand);
-
-        if (!heldItem.isOf(Items.POTION) || !ItemHelper.isWaterBottle(heldItem)) {
+        if (heldItem.not(Items.POTION) || !heldItem.isWaterBottle()) {
             return ActionResult.PASS;
         }
 
-        if (world.isClient()) {
-            return ActionResult.SUCCESS;
-        }
-
-        var entityId = entity.getUuid();
-        var currentTime = world.getTime();
-
-        if (COOLDOWN_MAP.containsKey(entityId)) {
-            long lastUseTime = COOLDOWN_MAP.get(entityId);
-            if (currentTime - lastUseTime < COOLDOWN_TICKS) {
-                return ActionResult.PASS;
-            }
-        }
-
-        COOLDOWN_MAP.put(entityId, currentTime);
-
         try {
             if (OXIDATION_LEVEL_FIELD == null) {
-                for (Field field : entity.getClass().getDeclaredFields()) {
+                for (Field field : entity.get().getClass().getDeclaredFields()) {
                     field.setAccessible(true);
 
-                    if (TrackedData.class.isAssignableFrom(field.getType()) && java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+                    if (TrackedData.class.isAssignableFrom(field.getType()) && Modifier.isStatic(field.getModifiers())) {
                         try {
-                            Object fieldValue = field.get(null);
-
+                            var fieldValue = field.get(null);
                             if (fieldValue instanceof TrackedData<?>) {
                                 try {
-                                    Object value = entity.getDataTracker().get((TrackedData<?>) fieldValue);
-
+                                    var value = entity.get().getDataTracker().get((TrackedData<?>) fieldValue);
                                     if (value instanceof Oxidizable.OxidationLevel) {
                                         OXIDATION_LEVEL_FIELD = field;
                                         break;
@@ -84,17 +62,12 @@ public class EaseonEntityInteractHandler {
             }
 
             if (OXIDATION_LEVEL_FIELD != null) {
-                @SuppressWarnings("unchecked")
-                TrackedData<Oxidizable.OxidationLevel> oxidationData =
-                        (TrackedData<Oxidizable.OxidationLevel>) OXIDATION_LEVEL_FIELD.get(null);
-
-                Oxidizable.OxidationLevel currentLevel = entity.getDataTracker().get(oxidationData);
-
+                //noinspection unchecked
+                var oxidationData = (TrackedData<Oxidizable.OxidationLevel>) OXIDATION_LEVEL_FIELD.get(null);
+                var currentLevel = entity.get().getDataTracker().get(oxidationData);
                 if (currentLevel != Oxidizable.OxidationLevel.OXIDIZED) {
                     Oxidizable.OxidationLevel nextLevel = getNextOxidationLevel(currentLevel);
-
-                    entity.getDataTracker().set(oxidationData, nextLevel);
-
+                    entity.get().getDataTracker().set(oxidationData, nextLevel);
                 } else {
                     return ActionResult.PASS;
                 }
@@ -106,17 +79,14 @@ public class EaseonEntityInteractHandler {
             return ActionResult.FAIL;
         }
 
-        if (!player.getAbilities().creativeMode) {
-            heldItem.decrement(1);
-            EaseonItem.giveOrDropItem(player, Items.GLASS_BOTTLE);
+        if (player.isSurvival()) {
+            player.removeItem(heldItem, 1);
+            player.giveOrDropItem(Items.GLASS_BOTTLE, 1);
         }
 
-        EaseonParticle.spawn(world, ParticleTypes.WAX_ON, entity.getX(), entity.getY() + entity.getHeight() / 2, entity.getZ(), 10, 0.3, 0.3, 0.3, 0.1);
-        EaseonSound.playAll(world, entity.getBlockPos(), SoundEvents.ITEM_BOTTLE_EMPTY, SoundCategory.BLOCKS);
+        world.particles(ParticleTypes.WAX_ON, entity.getX(), entity.getY() + entity.getHeight() / 2, entity.getZ(), 10, 0.3, 0.3, 0.3, 0.1);
+        world.playSound(entity.getPos(), SoundEvents.ITEM_BOTTLE_EMPTY, SoundCategory.BLOCKS, 1.0f);
 
-        COOLDOWN_MAP.entrySet().removeIf(entry -> currentTime - entry.getValue() > 100);
-
-//        logger.info("=== Oxidation process completed ===");
         return ActionResult.FAIL;
     }
 

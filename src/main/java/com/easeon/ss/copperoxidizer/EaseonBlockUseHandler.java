@@ -42,13 +42,13 @@ public class EaseonBlockUseHandler {
         newState = block.copyAllProperties(newState);
         world.setBlockState(pos, newState);
 
-        player.removeItem(heldItem);
+        player.removeItem(heldItem, 1);
         if (player.isSurvival()) {
             player.giveOrDropItem(Items.GLASS_BOTTLE, 1);
         }
 
-        world.Particles(ParticleTypes.WAX_ON, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 10, 0.3, 0.3, 0.3, 0.1);
-        world.playSound(player, SoundEvents.ITEM_BOTTLE_EMPTY, SoundCategory.BLOCKS);
+        world.particles(ParticleTypes.WAX_ON, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 10, 0.3, 0.3, 0.3, 0.1);
+        world.playSound(player.getPos(), SoundEvents.ITEM_BOTTLE_EMPTY, SoundCategory.BLOCKS, 1.0f);
 
         return ActionResult.SUCCESS;
     }
