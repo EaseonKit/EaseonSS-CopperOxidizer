@@ -5,17 +5,14 @@ import com.easeon.ss.core.wrapper.EaseonEntity;
 import com.easeon.ss.core.wrapper.EaseonPlayer;
 import com.easeon.ss.core.wrapper.EaseonWorld;
 import net.minecraft.block.Oxidizable;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.world.World;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -23,13 +20,10 @@ public class EaseonEntityInteractHandler {
     private static final EaseonLogger logger = EaseonLogger.of();
     private static Field OXIDATION_LEVEL_FIELD = null;
 
-    public static ActionResult onUseEntity(ServerPlayerEntity mcPlayer, World mcWorld, Entity mcEntity, Hand hand) {
-        var entity = new EaseonEntity(mcEntity);
+    public static ActionResult onUseEntity(EaseonWorld world, EaseonPlayer player, Hand hand, EaseonEntity entity) {
         if (entity.not(EntityType.COPPER_GOLEM))
             return ActionResult.PASS;
 
-        var player = new EaseonPlayer(mcPlayer);
-        var world = new EaseonWorld(mcWorld);
         var heldItem = player.getStackInHand(hand);
         if (heldItem.not(Items.POTION) || !heldItem.isWaterBottle()) {
             return ActionResult.PASS;

@@ -2,35 +2,28 @@ package com.easeon.ss.copperoxidizer;
 
 import com.easeon.ss.core.helper.CopperHelper;
 import com.easeon.ss.core.util.system.EaseonLogger;
+import com.easeon.ss.core.wrapper.EaseonBlockHit;
 import com.easeon.ss.core.wrapper.EaseonPlayer;
 import com.easeon.ss.core.wrapper.EaseonWorld;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.world.World;
 
 public class EaseonBlockUseHandler {
     private static final EaseonLogger logger = EaseonLogger.of();
 
-    public static ActionResult onUseBlock(ServerPlayerEntity playerEntity, World mcWorld, Hand hand, BlockHitResult hitResult) {
-        var player = new EaseonPlayer(playerEntity);
+    public static ActionResult onUseBlock(EaseonWorld world, EaseonPlayer player, Hand hand, EaseonBlockHit hit) {
         var heldItem = player.getStackInHand(hand);
-
-        if (!heldItem.isWaterBottle()) {
+        if (!heldItem.isWaterBottle())
             return ActionResult.PASS;
-        }
 
-        var world = new EaseonWorld(mcWorld);
-        var pos = hitResult.getBlockPos();
+        var pos = hit.getBlockPos();
         var block = world.getBlockState(pos);
         var item = block.easeonItem();
 
-        // 산화 가능한 블록인지 확인
         if (CopperHelper.isSneakingRequired(item) && !player.isSneaking())
             return ActionResult.PASS;
 
