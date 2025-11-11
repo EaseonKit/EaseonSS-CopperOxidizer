@@ -16,18 +16,18 @@ public class EaseonBlockUseHandler {
     private static final EaseonLogger logger = EaseonLogger.of();
 
     public static ActionResult onUseBlock(EaseonWorld world, EaseonPlayer player, Hand hand, EaseonBlockHit hit) {
-        var heldItem = player.getStackInHand(hand);
+        final var heldItem = player.getStackInHand(hand);
         if (!heldItem.isWaterBottle())
             return ActionResult.PASS;
 
-        var pos = hit.getBlockPos();
-        var block = world.getBlockState(pos);
-        var item = block.easeonItem();
+        final var pos = hit.getBlockPos();
+        final var block = world.getBlockState(pos);
+        final var item = block.easeonItem();
 
         if (CopperHelper.isSneakingRequired(item) && !player.isSneaking())
             return ActionResult.PASS;
 
-        var oxidizer = CopperHelper.oxidize(item);
+        final var oxidizer = CopperHelper.oxidize(item);
         if (oxidizer.isEmpty())
             return ActionResult.PASS;
 
