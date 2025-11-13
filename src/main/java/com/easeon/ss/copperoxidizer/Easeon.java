@@ -30,8 +30,8 @@ public class Easeon extends BaseToggleModule implements ModInitializer {
             entityInteractTask = EaseonEntityInteract.on(EventPhase.BEFORE, EaseonEntityInteractHandler::onUseEntity);
         }
         if (!config.enabled && blockUseTask != null && entityInteractTask != null) {
-            EaseonBlockUse.unregister(blockUseTask);
-            EaseonEntityInteract.unregister(entityInteractTask);
+            EaseonBlockUse.off(blockUseTask);
+            EaseonEntityInteract.off(entityInteractTask);
             blockUseTask = null;
             entityInteractTask = null;
         }
