@@ -6,6 +6,7 @@ import com.easeon.ss.core.api.events.EaseonBlockUse;
 import com.easeon.ss.core.api.events.EaseonBlockUse.BlockUseTask;
 import com.easeon.ss.core.api.events.EaseonEntityInteract;
 import com.easeon.ss.core.api.events.EaseonEntityInteract.EntityInteractTask;
+import com.easeon.ss.core.helper.CopperHelper;
 import net.fabricmc.api.ModInitializer;
 
 public class Easeon extends BaseToggleModule implements ModInitializer {
@@ -19,17 +20,18 @@ public class Easeon extends BaseToggleModule implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        CopperHelper.init();
         logger.info("Initialized!");
     }
 
     public void updateTask() {
         if (config.enabled && blockUseTask == null && entityInteractTask == null) {
-            blockUseTask = EaseonBlockUse.register(EventPhase.BEFORE, EaseonBlockUseHandler::onUseBlock);
-            entityInteractTask = EaseonEntityInteract.register(EventPhase.BEFORE, EaseonEntityInteractHandler::onUseEntity);
+            blockUseTask = EaseonBlockUse.on(EventPhase.BEFORE, EaseonBlockUseHandler::onUseBlock);
+            entityInteractTask = EaseonEntityInteract.on(EventPhase.BEFORE, EaseonEntityInteractHandler::onUseEntity);
         }
         if (!config.enabled && blockUseTask != null && entityInteractTask != null) {
-            EaseonBlockUse.unregister(blockUseTask);
-            EaseonEntityInteract.unregister(entityInteractTask);
+            EaseonBlockUse.off(blockUseTask);
+            EaseonEntityInteract.off(entityInteractTask);
             blockUseTask = null;
             entityInteractTask = null;
         }
